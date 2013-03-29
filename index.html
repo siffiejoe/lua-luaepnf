@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="content-type" content="text/html; charset=utf-8" /><title>luaepnf -- Extended PEG Notation Format</title><link rel="stylesheet" type="text/css" href="default.css" /><link rel="stylesheet" type="text/css" href="highlight.css" /><script type="text/javascript" src="highlight.pack.js"></script><script type="text/javascript">
+      hljs.initHighlightingOnLoad();
+    </script></head><body>
+
+<p><img src="luaepnf.png" alt="luaepnf Logo" /></p>
+
+<h1>luaepnf -- Extended PEG Notation Format</h1><div class="toc"><a href="#Introduction" title="Introduction">Introduction</a> · <a href="#Basic_Usage" title="Basic Usage">Basic Usage</a> · <a href="#Reference" title="Reference">Reference</a> · <a href="#Download" title="Download">Download</a> · <a href="#Installation" title="Installation">Installation</a> · <a href="#Contact" title="Contact">Contact</a> · <a href="#License" title="License">License</a></div>
+
+<h2><a name="Introduction" id="Introduction"></a>Introduction</h2>
+
+<p>The <a href="http://www.inf.puc-rio.br/~roberto/lpeg/lpeg.html" title="LPeg">LPeg</a> library is a powerful tool to parse text and extract
+parts of it using captures. It even provides grammars, which can be
+used to parse non-regular languages, but the complexer the language
+gets, the more difficult error handling and keeping track of captured
+information becomes. <code>luaepnf</code> enhances usage of LPeg grammars by
+building an abstract syntax tree (AST) for the input and providing
+tools for error reporting, as well as offering syntax sugar and
+shortcuts for accessing LPeg's features.</p>
+
+
+<h2><a name="Basic_Usage" id="Basic_Usage"></a>Basic Usage</h2>
+
+<p>The <code>luaepnf</code> module provides syntax sugar for defining <a href="http://www.inf.puc-rio.br/~roberto/lpeg/lpeg.html" title="LPeg">LPeg</a>
+grammars with error handling and AST building:</p>
+
+<pre><code>$ cat &gt; test.lua
+local epnf = require( "epnf" )
+
+local g = epnf.define( function(_ENV)
+  local _ = WS^0
+  local number = C( P"-"^-1 * R"09"^1 )
+  local err = E"variable, number, or '(' expected"
+
+  START "expr"
+  expr = _ * (V"aexpr"+err) * EOF"operator (+-*/) expected"
+  aexpr = V"mexpr" * (S"+-" * _ * (V"mexpr"+err))^0
+  mexpr = V"term" * (S"*/" * _ * (V"term"+err))^0
+  term = (ID + number + (P"(" * _ *
+         (V"aexpr"+err) * (P")"+E") expected"))) * _
+end )
+
+local s = "12 + 9"
+--local s = "12 + 9 * (c+11)"
+--local s = "1 1"
+--local s = "*"
+print( '"' .. s .. '"' )
+local ast = epnf.parsestring( g, s )
+epnf.dumpast( ast )
+^D
+</code></pre>
+
+<p>The output is the abstract syntax tree (or an error message):</p>
+<pre><code class="no-highlight">$ lua test.lua
+"12 + 9"
+{
+  id = expr,  pos = 1
+  1 = {
+    id = aexpr,  pos = 1
+    1 = {
+      id = mexpr,  pos = 1
+      1 = {
+        id = term,  pos = 1
+        1 = 12
+      }
+    }
+    2 = {
+      id = mexpr,  pos = 6
+      1 = {
+        id = term,  pos = 6
+        1 = 9
+      }
+    }
+  }
+}
+</code></pre>
+
+
+
+<h2><a name="Reference" id="Reference"></a>Reference</h2>
+
+<p>The <code>luaepnf</code> module provides the following public functions:</p>
+
+<ul><li><p><code>epnf.define( func [, g] ) -&gt; g</code></p>
+    
+    <p>This function provides a suitable environment for the given
+    function <code>func()</code> which must take a single parameter called <code>_ENV</code>
+    for Lua 5.2 and up, and calls it to execute the rule definitions
+    contained in <code>func()</code>. It returns an LPeg grammar table containing
+    the patterns for the rule definitions. If a table is given as a
+    second argument, the patterns are stored there. This can be used
+    to change/complete an existing grammar.</p></li>
+    <li><p><code>epnf.parse( g, name, input [, ...] ) -&gt; ast, name, input</code></p>
+    
+    <p>This function calls LPeg's <code>match()</code> function with the given
+    grammar <code>g</code> and <code>input</code> string. The input's <code>name</code> is passed
+    via <code>Carg( 1 )</code>, and is used in error messages. All remaining
+    arguments are free for use and can be accessed in the grammar
+    using <code>Carg( 2 )</code> and up.</p>
+    
+    <p>Return value is a tree structure representing the AST of the
+    input under the given grammar. This function can return nil or
+    raise an error depending on the error handling strategy in the
+    grammar if the matching fails. The last two return values are only
+    useful if you intend to use the <code>epnf.raise()</code> function.</p></li>
+    <li><p><code>epnf.parsefile( g, filename [, ...] ) -&gt; ast, name, input</code></p>
+    
+    <p>Calls <code>epnf.parse()</code> with the contents of the given file.</p></li>
+    <li><p><code>epnf.parsestring( g, string [, ...] ) -&gt; ast, name, input</code></p>
+    
+    <p>Calls <code>epnf.parse()</code> with a name derived from the input string.</p></li>
+    <li><p><code>epnf.dumpast( ast )</code></p>
+    
+    <p>This function prints a human readable representation of the <code>ast</code>
+    to <code>stderr</code>. It is useful during development or debugging.</p></li>
+    <li><p><code>epnf.raise( name, msg, source, position )</code></p>
+    
+    <p>This function raises an error similar to the LPeg pattern
+    <code>E( msg )</code> (see below) with input name, line number and a visual
+    marker for <code>position</code>. It can be used during validation of the
+    AST, which has suitable positions in the <code>pos</code> field of its nodes.
+    <code>name</code> and <code>source</code> are typically kept from the <code>epnf.parse*()</code>
+    function calls.</p></li>
+</ul><h3>Custom Environment for Grammar Definition</h3>
+
+<p>The <code>epnf.define()</code> function calls its argument with a custom
+environment, which contains all LPeg patterns and the extra patterns
+and functions listed below. The environment also has a <code>__newindex</code>
+metamethod which creates rules on each global assignment, that later
+can be referenced using LPeg's <code>V( name )</code> operator. The pattern on
+the right handside of an assignment is enhanced to construct an AST
+node (a table) when matched. Each AST node contains an <code>id</code> field with
+the name of the matching rule, a <code>pos</code> field with the byte position of
+the match in the input string, and all captures and AST nodes for
+matching rule references in the pattern in the array part of the
+table.</p>
+
+<ul><li><p><code>START( name )</code></p>
+    
+    <p>This function sets the name of the starting rule of the resulting
+    LPeg grammar.</p></li>
+    <li><p><code>E( [msg] )</code></p>
+    
+    <p>Creates an LPeg pattern that, when matched by LPeg, raises a parse
+    error using the custom error message with input name, line number,
+    and error location. If <code>msg</code> is absent or nil, a generic parse
+    error is raised.</p></li>
+    <li><p><code>EOF( [msg] )</code></p>
+    
+    <p>Raises a parse error using the optional error message if there are
+    any unprocessed input characters left. Never use this pattern in
+    recursive rules!</p></li>
+    <li><p><code>ID</code></p>
+    
+    <p>An LPeg pattern that matches and captures an identifier as used in
+    programming languages, i.e. letters and <code>_</code> followed by letters,
+    digits, or <code>_</code>.</p></li>
+    <li><p><code>W( word )</code></p>
+    
+    <p>Creates an LPeg pattern similar to <code>P( word )</code>, but makes sure,
+    that word is not followed by letters, numbers, or <code>_</code> (so it
+    matches complete words only). Does not capture anything.</p></li>
+    <li><p><code>WS</code></p>
+    
+    <p>Matches a single whitespace character. Captures nothing.</p></li>
+</ul><p>Every predefined pattern or function in the custom environment starts
+with a capital letter, so using lower-case rule names is advisable to
+avoid naming conflicts.</p>
+
+
+<h2><a name="Download" id="Download"></a>Download</h2>
+
+<p>The source code (with documentation and test scripts) is available on
+<a href="https://github.com/siffiejoe/lua-luaepnf/">github</a>.</p>
+
+
+
+<h2><a name="Installation" id="Installation"></a>Installation</h2>
+
+<p>There are two ways to install this module, either using luarocks (if
+this module already ended up in the <a href="http://luarocks.org/repositories/rocks/" title="Main Repository">main luarocks repository</a>) or
+manually.</p>
+
+<p>Using luarocks, simply type:</p>
+
+<pre><code>luarocks install luaepnf
+</code></pre>
+
+<p>To install the module manually just drop <code>epnf.lua</code> somewhere into
+your Lua <code>package.path</code>.</p>
+
+
+
+<h2><a name="Contact" id="Contact"></a>Contact</h2>
+
+<p>Philipp Janda, siffiejoe(a)gmx.net</p>
+
+<p>Comments and feedback are always welcome.</p>
+
+
+<h2><a name="License" id="License"></a>License</h2>
+
+<p>luaepnf is <em>copyrighted free software</em> distributed under the MIT
+license (the same license as Lua 5.1). The full license text follows:</p>
+
+<pre><code class="no-highlight">luaepnf (c) 2013 Philipp Janda
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</code></pre>
+
+
+
+</body></html>
