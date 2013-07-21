@@ -1,6 +1,6 @@
 #!/usr/bin/lua
 
-package.path = package.path .. ";../src/?.lua"
+package.path = "../src/?.lua;" .. package.path
 local epnf = require( "epnf" )
 
 

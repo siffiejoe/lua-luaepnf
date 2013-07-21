@@ -1,6 +1,6 @@
 #!/usr/bin/lua
 
-package.path = package.path .. ";../src/?.lua"
+package.path = "../src/?.lua;" .. package.path
 local epnf = require( "epnf" )
 
 
@@ -22,17 +22,17 @@ local pg = epnf.define( function(_ENV) -- begin of grammar definition
   local oct = P"0" * (C( octdigit^1 ) * Cc( 8 )) / tonumber
   local hex = P"0" * S"xX" * (C( hexdigit^1 ) * Cc( 16 )) / tonumber
   local letter = R( "az", "AZ" ) + P"_"
-  local charescape = C( P"\\" * S"abfnrtv\\'\"" ) / {
-    [ "\\a" ] = "\a", [ "\\b" ] = "\b", [ "\\f" ] = "\f",
-    [ "\\n" ] = "\n", [ "\\r" ] = "\r", [ "\\t" ] = "\t",
-    [ "\\v" ] = "\v", [ "\\\\" ] = "\\", [ "\\'" ] = "'",
-    [ '\\"' ] = '"'
+  local charescape = P"\\" * C( S"abfnrtv\\'\"" ) / {
+    [ "a" ] = "\a", [ "b" ] = "\b", [ "f" ] = "\f",
+    [ "n" ] = "\n", [ "r" ] = "\r", [ "t" ] = "\t",
+    [ "v" ] = "\v", [ "\\" ] = "\\", [ "'" ] = "'",
+    [ '"' ] = '"'
   }
-  local hexescape = C( P"\\" * S"xX" * hexdigit * hexdigit^-1 ) / function( s )
-    return string.char( tonumber( s:sub( 3 ), 16 ) )
+  local hexescape = P"\\" * S"xX" * C( hexdigit * hexdigit^-1 ) / function( s )
+    return string.char( tonumber( s, 16 ) )
   end
-  local octescape = C( P"\\" * P"0"^-1 * octdigit * octdigit^-2 ) / function( s )
-    return string.char( tonumber( s:sub( 2 ), 8 ) )
+  local octescape = P"\\" * C( P"0"^-1 * octdigit * octdigit^-2 ) / function( s )
+    return string.char( tonumber( s, 8 ) )
   end
   local sliteral = (P'"' * Cs( (charescape + hexescape +
                      octescape + (any-P'"'))^0 ) * P'"') +
