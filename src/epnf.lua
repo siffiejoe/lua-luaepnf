@@ -75,12 +75,21 @@ local function parse_error( s, p, n, e )
 end
 
 
-local function make_ast_node( id, pos, t )
+local function make_ast_node_( id, pos, t )
+    if (id == "element") then
+      return t[1]
+    else
+      t.id = id
+      t.pos = pos
+      return t
+    end
+end
+
+local function make_ast_node ( id, pos, t )
   t.id = id
   t.pos = pos
   return t
 end
-
 
 -- some useful/common lpeg patterns
 local L_Cp = L.Cp()
@@ -105,9 +114,23 @@ local WS = L.S" \r\n\t\f\v"
 function epnf.define( func, g )
   g = g or {}
   local env = {}
+  local suppressed = {}
+  local function suppress(...) 
+      suppressed = {...} 
+  end
+  local function is_suppressed(id)
+      local sup = false
+      for _, v in ipairs(suppressed) do
+          if (id == v) then
+            sup = true
+          end
+      end
+      return sup
+  end
   local env_index = {
     START = function( name ) g[ 1 ] = name end,
     E = E,
+    suppress = suppress ,
     EOF = EOF,
     ID = ID,
     W = W,
@@ -120,10 +143,26 @@ function epnf.define( func, g )
     end
   end
   setmetatable( env_index, { __index = _G } )
+
+  local function ast_suppress(id,pos,t)
+      if (is_suppressed(id)) then
+        return t[1]
+      else
+        t.id = id
+        t.pos = pos
+        return t
+      end
+  end
+
   setmetatable( env, {
     __index = env_index,
     __newindex = function( _, name, val )
-      g[ name ] = (L.Cc( name ) * L_Cp * L.Ct( val )) / make_ast_node
+      g[ name ] = (L.Cc( name ) * L_Cp * L.Ct( val )) / ast_suppress
+      -- this is the voodoo.
+      -- L.Cc ( name ) produces name as a capture, matching the empty string.
+      -- L_Cp matches the position, and is a number. So far so good.
+      -- L_Ct ( val ) is a table capture. 'val' is a pattern.
+      -- make_ast_node is applied to these arguments. Ain't that swell. 
     end
   } )
   -- call passed function with custom environment (5.1- and 5.2-style)
@@ -182,7 +221,7 @@ local function dump_ast( node, prefix )
     end
     write( prefix, "}\n" )
   else
-    write( tostring( node ), "\n" )
+    write( "\"", tostring( node ), "\"\n" )
   end
 end
 
