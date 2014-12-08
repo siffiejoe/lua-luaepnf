@@ -75,17 +75,12 @@ local function parse_error( s, p, n, e )
 end
 
 
-local function make_ast_node_( id, pos, t )
-      t.id = id
-      t.pos = pos
-      return t
-end
-
 local function make_ast_node ( id, pos, t )
   t.id = id
   t.pos = pos
   return t
 end
+
 
 -- some useful/common lpeg patterns
 local L_Cp = L.Cp()
