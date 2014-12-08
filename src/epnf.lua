@@ -146,7 +146,9 @@ function epnf.define( func, g )
 
   local function ast_suppress(id,pos,t)
       if (is_suppressed(id)) then
-        return t[1]
+        if t[2] then
+           return unpack(t)
+        else return t[1] end
       else
         t.id = id
         t.pos = pos
