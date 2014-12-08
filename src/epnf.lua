@@ -76,13 +76,9 @@ end
 
 
 local function make_ast_node_( id, pos, t )
-    if (id == "element") then
-      return t[1]
-    else
       t.id = id
       t.pos = pos
       return t
-    end
 end
 
 local function make_ast_node ( id, pos, t )
@@ -130,7 +126,7 @@ function epnf.define( func, g )
   local env_index = {
     START = function( name ) g[ 1 ] = name end,
     E = E,
-    suppress = suppress ,
+    SUPPRESS = suppress ,
     EOF = EOF,
     ID = ID,
     W = W,
@@ -146,9 +142,7 @@ function epnf.define( func, g )
 
   local function ast_suppress(id,pos,t)
       if (is_suppressed(id)) then
-        if t[2] then
-           return unpack(t)
-        else return t[1] end
+        return unpack(t)
       else
         t.id = id
         t.pos = pos
@@ -204,7 +198,7 @@ end
 
 
 local function write( ... ) return io.stderr:write( ... ) end
-local function dump_ast( node, prefix )
+local function dump_ast( node, prefix)
   if type( node ) == "table" then
     write( "{" )
     if next( node ) ~= nil then
