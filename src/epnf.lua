@@ -75,7 +75,7 @@ local function parse_error( s, p, n, e )
 end
 
 
-local function make_ast_node( id, pos, t )
+local function make_ast_node ( id, pos, t )
   t.id = id
   t.pos = pos
   return t
@@ -105,9 +105,23 @@ local WS = L.S" \r\n\t\f\v"
 function epnf.define( func, g )
   g = g or {}
   local env = {}
+  local suppressed = {}
+  local function suppress(...) 
+      suppressed = {...} 
+  end
+  local function is_suppressed(id)
+      local sup = false
+      for _, v in ipairs(suppressed) do
+          if (id == v) then
+            sup = true
+          end
+      end
+      return sup
+  end
   local env_index = {
     START = function( name ) g[ 1 ] = name end,
     E = E,
+    SUPPRESS = suppress ,
     EOF = EOF,
     ID = ID,
     W = W,
@@ -120,10 +134,21 @@ function epnf.define( func, g )
     end
   end
   setmetatable( env_index, { __index = _G } )
+
+  local function ast_suppress(id,pos,t)
+      if (is_suppressed(id)) then
+        return unpack(t)
+      else
+        t.id = id
+        t.pos = pos
+        return t
+      end
+  end
+
   setmetatable( env, {
     __index = env_index,
     __newindex = function( _, name, val )
-      g[ name ] = (L.Cc( name ) * L_Cp * L.Ct( val )) / make_ast_node
+      g[ name ] = (L.Cc( name ) * L_Cp * L.Ct( val )) / ast_suppress
     end
   } )
   -- call passed function with custom environment (5.1- and 5.2-style)
@@ -163,7 +188,7 @@ end
 
 
 local function write( ... ) return io.stderr:write( ... ) end
-local function dump_ast( node, prefix )
+local function dump_ast( node, prefix)
   if type( node ) == "table" then
     write( "{" )
     if next( node ) ~= nil then
@@ -182,7 +207,7 @@ local function dump_ast( node, prefix )
     end
     write( prefix, "}\n" )
   else
-    write( tostring( node ), "\n" )
+    write( "\"", tostring( node ), "\"\n" )
   end
 end
 
