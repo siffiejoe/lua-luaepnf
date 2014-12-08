@@ -149,11 +149,6 @@ function epnf.define( func, g )
     __index = env_index,
     __newindex = function( _, name, val )
       g[ name ] = (L.Cc( name ) * L_Cp * L.Ct( val )) / ast_suppress
-      -- this is the voodoo.
-      -- L.Cc ( name ) produces name as a capture, matching the empty string.
-      -- L_Cp matches the position, and is a number. So far so good.
-      -- L_Ct ( val ) is a table capture. 'val' is a pattern.
-      -- make_ast_node is applied to these arguments. Ain't that swell. 
     end
   } )
   -- call passed function with custom environment (5.1- and 5.2-style)
