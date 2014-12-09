@@ -141,6 +141,10 @@ table.
     This function sets the name of the starting rule of the resulting
     LPeg grammar.
 
+*   `SUPPRESS( ... )`
+
+    Prevents the rules named as arguments from producing an AST node.
+
 *   `E( [msg] )`
 
     Creates an LPeg pattern that, when matched by LPeg, raises a parse

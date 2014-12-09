@@ -104,9 +104,16 @@ local WS = L.S" \r\n\t\f\v"
 -- with lots of syntax sugar
 function epnf.define( func, g )
   g = g or {}
+  local suppressed = {}
   local env = {}
   local env_index = {
     START = function( name ) g[ 1 ] = name end,
+    SUPPRESS = function( ... )
+      suppressed = {}
+      for i = 1, select( '#', ... ) do
+        suppressed[ select( i, ... ) ] = true
+      end
+    end,
     E = E,
     EOF = EOF,
     ID = ID,
@@ -123,7 +130,11 @@ function epnf.define( func, g )
   setmetatable( env, {
     __index = env_index,
     __newindex = function( _, name, val )
-      g[ name ] = (L.Cc( name ) * L_Cp * L.Ct( val )) / make_ast_node
+      if suppressed[ name ] then
+        g[ name ] = val
+      else
+        g[ name ] = (L.Cc( name ) * L_Cp * L.Ct( val )) / make_ast_node
+      end
     end
   } )
   -- call passed function with custom environment (5.1- and 5.2-style)
