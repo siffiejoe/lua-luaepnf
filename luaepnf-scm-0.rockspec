@@ -1,7 +1,7 @@
 package = "luaepnf"
-version = "0.2-1"
+version = "scm-0"
 source = {
-  url = "${SRCURL}"
+  url = "git://github.com/siffiejoe/lua-luaepnf.git"
 }
 description = {
   summary = "Extended PEG Notation Format (easy grammars for LPeg)",
@@ -9,7 +9,7 @@ description = {
     This Lua module provides sugar for writing grammars/parsers using
     the LPeg library. It simplifies error reporting and AST building.
   ]],
-  homepage = "${HPURL}",
+  homepage = "http://siffiejoe.github.io/lua-luaepnf/",
   license = "MIT"
 }
 dependencies = {
