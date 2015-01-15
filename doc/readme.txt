@@ -1,5 +1,3 @@
-![luaepnf Logo](luaepnf.png)
-
 #               luaepnf -- Extended PEG Notation Format              #
 
 ##                           Introduction                           ##
@@ -26,7 +24,7 @@ grammars with error handling and AST building:
       local _ = WS^0
       local number = C( P"-"^-1 * R"09"^1 )
       local err = E"variable, number, or '(' expected"
-    
+
       START "expr"
       expr = _ * (V"aexpr"+err) * EOF"operator (+-*/) expected"
       aexpr = V"mexpr" * (S"+-" * _ * (V"mexpr"+err))^0
@@ -215,7 +213,7 @@ Comments and feedback are always welcome.
 luaepnf is *copyrighted free software* distributed under the MIT
 license (the same license as Lua 5.1). The full license text follows:
 
-    luaepnf (c) 2013 Philipp Janda
+    luaepnf (c) 2013-2015 Philipp Janda
 
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
