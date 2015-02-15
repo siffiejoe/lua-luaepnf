@@ -1,8 +1,9 @@
 local L = require( "lpeg" )
 
 local assert = assert
-local _VERSION = assert( _VERSION )
 local string, io = assert( string ), assert( io )
+local V = string.sub( assert( _VERSION ), -4 )
+local _G = assert( _G )
 local error = assert( error )
 local pairs = assert( pairs )
 local next = assert( next )
@@ -10,8 +11,10 @@ local type = assert( type )
 local tostring = assert( tostring )
 local setmetatable = assert( setmetatable )
 local setfenv = setfenv
-if _VERSION == "Lua 5.1" then
+local getfenv = getfenv
+if V == " 5.1" then
   assert( setfenv )
+  assert( getfenv )
 end
 
 
@@ -102,8 +105,11 @@ local WS = L.S" \r\n\t\f\v"
 
 -- setup an environment where you can easily define lpeg grammars
 -- with lots of syntax sugar
-function epnf.define( func, g )
+function epnf.define( func, g, e )
   g = g or {}
+  if e == nil then
+    e = V == " 5.1" and getfenv( func ) or _G
+  end
   local suppressed = {}
   local env = {}
   local env_index = {
@@ -126,7 +132,7 @@ function epnf.define( func, g )
       env_index[ k ] = v
     end
   end
-  setmetatable( env_index, { __index = _G } )
+  setmetatable( env_index, { __index = e } )
   setmetatable( env, {
     __index = env_index,
     __newindex = function( _, name, val )
@@ -138,7 +144,7 @@ function epnf.define( func, g )
     end
   } )
   -- call passed function with custom environment (5.1- and 5.2-style)
-  if _VERSION == "Lua 5.1" then
+  if V == " 5.1" then
     setfenv( func, env )
   end
   func( env )

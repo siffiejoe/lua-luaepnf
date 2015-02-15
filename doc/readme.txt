@@ -73,7 +73,7 @@ The output is the abstract syntax tree (or an error message):
 
 The `luaepnf` module provides the following public functions:
 
-*   `epnf.define( func [, g] ) -> g`
+*   `epnf.define( func [, g [, e]] ) -> g`
 
     This function provides a suitable environment for the given
     function `func()` which must take a single parameter called `_ENV`
@@ -81,7 +81,8 @@ The `luaepnf` module provides the following public functions:
     contained in `func()`. It returns an LPeg grammar table containing
     the patterns for the rule definitions. If a table is given as a
     second argument, the patterns are stored there. This can be used
-    to change/complete an existing grammar.
+    to change/complete an existing grammar. The parameter `e` can be
+    used if `func` expects a function environment different from `_G`.
 
 *   `epnf.parse( g, name, input [, ...] ) -> ast, name, input`
 
