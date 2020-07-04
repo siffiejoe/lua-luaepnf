@@ -6,6 +6,8 @@ local epnf = require( "epnf" )
 
 local nan, inf = 0/0, 1/0
 
+-- luacheck: ignore _ENV protofile message import enum extend option service
+-- luacheck: ignore messagefield ignore extensions enumfield fieldoption msgoptionv rpc
 local pg = epnf.define( function(_ENV) -- begin of grammar definition
   -- some useful lexical patterns
   local any = P( 1 )
