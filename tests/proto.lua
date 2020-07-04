@@ -6,7 +6,7 @@ local epnf = require( "epnf" )
 
 local nan, inf = 0/0, 1/0
 
--- luacheck: ignore _ENV protofile message import enum extend option service
+-- luacheck: ignore _ENV protofile message import pkg enum extend option service
 -- luacheck: ignore messagefield ignore extensions enumfield fieldoption msgoptionv rpc
 local pg = epnf.define( function(_ENV) -- begin of grammar definition
   -- some useful lexical patterns
@@ -66,14 +66,14 @@ local pg = epnf.define( function(_ENV) -- begin of grammar definition
 
 
   START "protofile"
-  protofile = _ * syntax^-1 * (V"message" + V"import" + V"package" +
+  protofile = _ * syntax^-1 * (V"message" + V"import" + V"pkg" +
               V"enum" + V"extend" + V"option" + V"service" +
               empty_statement)^0 * EOF()
   message = W"message" * _ * (ID+E()) * _ * (P"{"+E()) * _ *
             (V"messagefield" + V"enum" + V"message" + V"extensions" +
             V"extend" + V"option" + empty_statement)^0 * (P"}"+E()) * _
   import = W"import" * _ * (sliteral+E()) * _ * (P";"+E()) * _
-  package = W"package" * _ * (ref+E()) * _ * (P";"+E()) * _
+  pkg = W"pkg" * _ * (ref+E()) * _ * (P";"+E()) * _
   enum = W"enum" * _ * (ID+E()) * _ * (P"{"+E()) * _ *
          (V"enumfield" + V"option" + empty_statement)^0 * (P"}"+E()) * _
   extend = W"extend" * _ * (ref+E()) * _ * (P"{"+E()) * _ *
