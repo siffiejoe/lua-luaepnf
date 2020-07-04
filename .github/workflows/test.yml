@@ -1,0 +1,29 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        luaVersion: ["5.4", "5.3", "5.2", "5.1", "luajit", "luajit-openresty"]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup Lua
+      uses: leafo/gh-actions-lua@v6
+      with:
+        luaVersion: ${{ matrix.luaVersion }}
+    - name: Setup Lua Rocks
+      uses: leafo/gh-actions-luarocks@v2
+    - name: Setup dependencies
+      run: |
+        luarocks install --only-deps luaepnf-scm-0.rockspec
+    - name: Run Tests
+      run: |
+        cd tests
+        for testf in *.lua; do
+          lua $testf
+        done
