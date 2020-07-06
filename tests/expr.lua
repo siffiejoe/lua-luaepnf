@@ -2,6 +2,7 @@
 package.path = "../src/?.lua;" .. package.path
 local epnf = require( "epnf" )
 
+-- luacheck: ignore _ENV expr aexpr mexpr term
 local g = epnf.define( function(_ENV)
   local _ = WS^0
   local number = C( P"-"^-1 * R"09"^1 )
