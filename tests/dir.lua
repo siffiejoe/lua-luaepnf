@@ -4,6 +4,7 @@ package.path = "../src/?.lua;" .. package.path
 local epnf = require( "epnf" )
 
 
+-- luacheck: ignore _ENV dsl dir file owner group mode action
 local g = epnf.define( function(_ENV)
   local _ = WS^0
   local str_E = P'"' * C( (P( 1 )-P'"')^0 ) * P'"'
