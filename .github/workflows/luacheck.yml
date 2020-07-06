@@ -12,7 +12,7 @@ jobs:
         luaVersion: 5.3
     - name: Setup Lua Rocks
       uses: leafo/gh-actions-luarocks@v2
-    - name: Instalal luacheck
+    - name: Install luacheck
       run: luarocks install luacheck
     - name: Lint all the Lua code
       run: luacheck .
