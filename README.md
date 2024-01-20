@@ -1,8 +1,8 @@
 lua-luaepnf
 ===========
 
-[![Lua Test Status](https://img.shields.io/github/workflow/status/siffiejoe/lua-luaepnf/Luacheck?label=Luacheck&logo=Lua)](https://github.com/siffiejoe/lua-luaepnf/actions?workflow=Luacheck)
-[![Lua Lint Status](https://img.shields.io/github/workflow/status/siffiejoe/lua-luaepnf/Tests?label=Tests&logo=Lua)](https://github.com/siffiejoe/lua-luaepnf/actions?workflow=Tests)
+[![Lua Test Status](https://img.shields.io/github/actions/workflow/status/siffiejoe/lua-luaepnf/luacheck.yml?branch=master&label=Luacheck&logo=Lua)](https://github.com/siffiejoe/lua-luaepnf/actions?workflow=Luacheck)
+[![Lua Lint Status](https://img.shields.io/github/actions/workflow/status/siffiejoe/lua-luaepnf/test.yml?branch=master&label=Tests&logo=Lua)](https://github.com/siffiejoe/lua-luaepnf/actions?workflow=Tests)
 
 Extended PEG Notation Format (easy grammars for LPeg)
 
